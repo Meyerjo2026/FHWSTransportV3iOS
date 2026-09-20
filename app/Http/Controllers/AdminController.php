@@ -11,6 +11,7 @@ use App\Support\TransportOptions;
 use App\Support\TripGrouper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
@@ -81,7 +82,8 @@ class AdminController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'qualification' => ['nullable', 'string', 'in:'.implode(',', TransportOptions::allQualifications())],
+            'qualifications' => ['nullable', 'array'],
+            'qualifications.*' => ['string', 'in:'.implode(',', TransportOptions::allQualifications())],
             'year' => ['nullable', 'string', 'in:'.implode(',', TransportOptions::YEAR_OPTIONS)],
         ]);
 
@@ -93,18 +95,19 @@ class AdminController extends Controller
             'role' => 'staff',
             'password' => Hash::make($tempPassword),
             'must_change_password' => true,
+            'active' => true,
         ]);
 
         $assigned = [];
-        foreach (['year' => $data['year'] ?? null, 'qualification' => $data['qualification'] ?? null] as $type => $value) {
+        foreach (array_merge((array) ($data['qualifications'] ?? []), [($data['year'] ?? null)]) as $value) {
             if (! $value) {
                 continue;
             }
             GroupAssignment::updateOrCreate(
-                ['type' => $type, 'value' => $value],
+                ['type' => str_contains($value, 'Year ') ? 'year' : 'qualification', 'value' => $value],
                 ['staff_id' => $staff->id]
             );
-            $assigned[] = "{$value} ({$type})";
+            $assigned[] = $value;
         }
 
         $message = "Created staff member {$data['name']} ({$data['email']}).";
@@ -114,6 +117,50 @@ class AdminController extends Controller
         $message .= " Temporary password: {$tempPassword} — the staff member must change it on first login.";
 
         return back()->with('success', $message);
+    }
+
+    public function resetStaffPassword(Request $request, User $staff)
+    {
+        abort_if(! $staff->isStaff(), 404);
+
+        $tempPassword = StaffController::generateTempPassword();
+        $staff->forceFill([
+            'password' => Hash::make($tempPassword),
+            'must_change_password' => true,
+        ])->save();
+
+        // Log them out everywhere so the change is forced.
+        DB::table('sessions')->where('user_id', $staff->id)->delete();
+
+        return back()->with('success', "Password reset for {$staff->name}. Temporary password: {$tempPassword} — must be changed on next login.");
+    }
+
+    public function toggleStaff(Request $request, User $staff)
+    {
+        abort_if(! $staff->isStaff(), 404);
+
+        $staff->active = ! $staff->active;
+        $staff->save();
+
+        if ($staff->active) {
+            return back()->with('success', "{$staff->name} has been reactivated and can log in again.");
+        }
+
+        // Kick out any open sessions immediately.
+        DB::table('sessions')->where('user_id', $staff->id)->delete();
+
+        return back()->with('success', "{$staff->name} has been deactivated and can no longer log in.");
+    }
+
+    public function destroyStaff(Request $request, User $staff)
+    {
+        abort_if(! $staff->isStaff(), 404);
+
+        DB::table('sessions')->where('user_id', $staff->id)->delete();
+        GroupAssignment::where('staff_id', $staff->id)->delete();
+        $staff->delete();
+
+        return back()->with('success', "{$staff->name} has been permanently removed from the platform.");
     }
 
     public function updateGroupAssignment(Request $request, string $type, string $value)

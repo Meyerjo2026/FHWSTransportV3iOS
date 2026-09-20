@@ -25,6 +25,7 @@ class User extends Authenticatable
         'role',
         'password',
         'must_change_password',
+        'active',
     ];
 
     public function tripRequests()
@@ -68,6 +69,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'must_change_password' => 'boolean',
+            'active' => 'boolean',
         ];
     }
 }

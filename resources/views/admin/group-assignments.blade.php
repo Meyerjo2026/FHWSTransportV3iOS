@@ -1,5 +1,6 @@
 @php
 $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/admin/review' => 'Approve / Reject', '/admin/journeys' => 'AI Trip Planner', '/admin/finalise' => 'Finalise Trips', '/admin/quotes' => 'Create RFQ', '/admin/bulk-trips' => 'Bulk Upload Trips', '/admin/sites' => 'Clinical Sites', '/admin/map' => 'Map', '/admin/group-assignments' => 'Staff Assignments'];
+$oldQuals = old('qualifications', []);
 @endphp
 <x-shell :user="$user" :active="'/admin/group-assignments'" :tabs="$tabs">
     <div class="stat-tiles" style="margin-bottom:20px;">
@@ -20,7 +21,7 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
         </div>
     </div>
 
-    <div class="card" style="max-width:680px;">
+    <div class="card" style="max-width:720px;">
         <h2>Create a staff member</h2>
         @if ($errors->any())
             <div class="msg error">{{ $errors->first() }}</div>
@@ -37,16 +38,18 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
                     <input name="email" type="email" placeholder="e.g. mokoent@cput.ac.za" value="{{ old('email') }}" required>
                 </div>
             </div>
-            <div class="grid">
-                <div class="field">
-                    <label>Responsible for qualification <span class="muted">(optional)</span></label>
-                    <select name="qualification">
-                        <option value="">— None —</option>
-                        @foreach ($qualifications as $qual)
-                            <option value="{{ $qual }}" @selected(old('qualification') === $qual)>{{ $qual }}</option>
-                        @endforeach
-                    </select>
+            <div class="field">
+                <label>Responsible for qualification(s) <span class="muted">(optional, select all that apply)</span></label>
+                <div class="chip-grid">
+                    @foreach ($qualifications as $qual)
+                        <label class="chip">
+                            <input type="checkbox" name="qualifications[]" value="{{ $qual }}" @checked(in_array($qual, $oldQuals))>
+                            {{ $qual }}
+                        </label>
+                    @endforeach
                 </div>
+            </div>
+            <div class="grid">
                 <div class="field">
                     <label>Responsible for year <span class="muted">(optional)</span></label>
                     <select name="year">
@@ -58,7 +61,7 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
                 </div>
             </div>
             <button class="btn" type="submit">Create staff member</button>
-            <p class="hint" style="margin-top:10px;">A temporary password is generated and shown after saving — the new staff member is asked to change it on first login. Responsible-for groups can be adjusted any time in the sections below.</p>
+            <p class="hint" style="margin-top:10px;">A temporary password is generated and shown after saving — the new staff member is asked to change it on first login. Assignments can be adjusted any time in the sections below.</p>
         </form>
     </div>
 
@@ -68,10 +71,10 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
             <div class="empty">No staff members yet. Use the form above to add the first one.</div>
         @else
             <table>
-                <thead><tr><th>Name</th><th>Email</th><th>Responsible for</th></tr></thead>
+                <thead><tr><th>Name</th><th>Email</th><th>Responsible for</th><th>Status</th><th style="width:230px;">Actions</th></tr></thead>
                 <tbody>
                     @foreach ($staffList as $entry)
-                        <tr>
+                        <tr @if (!$entry['staff']->active) style="opacity:.55;" @endif>
                             <td>{{ $entry['staff']->name }}</td>
                             <td class="muted">{{ $entry['staff']->email }}</td>
                             <td>
@@ -82,6 +85,34 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
                                         <span class="pill" title="{{ $a['label'] }}" style="margin:0 4px 4px 0;">{{ $a['value'] }}</span>
                                     @endforeach
                                 @endif
+                            </td>
+                            <td>
+                                @if ($entry['staff']->active)
+                                    <span class="pill" style="background:#e6f4ea;color:#2e7d32;border:0;">Active</span>
+                                @else
+                                    <span class="pill" style="background:#fdecea;color:#c62828;border:0;">Deactivated</span>
+                                @endif
+                            </td>
+                            <td>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                    <form method="POST" action="/admin/staff/{{ $entry['staff']->id }}/reset-password">
+                                        @csrf
+                                        <button class="btn small" type="submit">Reset password</button>
+                                    </form>
+                                    <form method="POST" action="/admin/staff/{{ $entry['staff']->id }}/toggle">
+                                        @csrf
+                                        @if ($entry['staff']->active)
+                                            <button class="btn small danger" type="submit">Deactivate</button>
+                                        @else
+                                            <button class="btn small" type="submit">Reactivate</button>
+                                        @endif
+                                    </form>
+                                    <form method="POST" action="/admin/staff/{{ $entry['staff']->id }}" onsubmit="return confirm('Permanently delete {{ $entry['staff']->name }} and remove all their group assignments?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn small danger" type="submit">Delete</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
