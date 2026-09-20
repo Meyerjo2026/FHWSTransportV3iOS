@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/journeys', [AdminApiController::class, 'journeys']);
         Route::post('/journeys', [AdminApiController::class, 'storeJourney']);
         Route::delete('/journeys/{journey}', [AdminApiController::class, 'destroyJourney']);
+        Route::get('/map', [AdminApiController::class, 'map']);
         Route::get('/quotes', [AdminApiController::class, 'quotes']);
         Route::post('/quotes', [AdminApiController::class, 'storeQuote']);
         Route::get('/quotes/{quote}', [AdminApiController::class, 'showQuote']);

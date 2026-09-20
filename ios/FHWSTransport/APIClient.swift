@@ -94,6 +94,14 @@ struct APIClient {
         return (try await send("POST", "admin/quotes", body: body) as QuoteSummary).id
     }
 
+    func map(department: String?, shift: String?, view: String, date: String?) async throws -> MapData {
+        var q: [String] = ["view=\(view)"]
+        if let department { q.append("department=" + (department.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)?.replacingOccurrences(of: "&", with: "%26") ?? "")) }
+        if let shift { q.append("shift=\(shift)") }
+        if let date { q.append("date=\(date)") }
+        return try await send("GET", "admin/map?" + q.joined(separator: "&"))
+    }
+
     private func send<T: Decodable>(_ method: String, _ path: String, body: (some Encodable)? = nil as String?) async throws -> T {
         guard let url = URL(string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) + "/api/" + path) else {
             throw APIError.badURL

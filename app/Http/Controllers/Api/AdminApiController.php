@@ -247,6 +247,21 @@ class AdminApiController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    public function map(Request $request): JsonResponse
+    {
+        $d = app(\App\Http\Controllers\Admin\MapController::class)->data($request);
+
+        return response()->json([
+            'pickup' => $d['pickup'],
+            'markers' => $d['markers'],
+            'journeys' => $d['journeys'],
+            'departments' => $d['departments'],
+            'total_placements' => $d['totalPlacements'],
+            'total_sites' => $d['totalSites'],
+            'total_journeys' => $d['totalJourneys'],
+        ]);
+    }
+
     public function quotes(): JsonResponse
     {
         $awaiting = TripRequest::where('status', 'finalised')->whereNull('quote_id')->get();

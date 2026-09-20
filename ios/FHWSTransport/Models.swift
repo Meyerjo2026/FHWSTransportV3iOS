@@ -248,3 +248,57 @@ struct QuoteDetail: Decodable {
 enum Money {
     static func format(_ v: Double) -> String { "R " + v.formatted(.number.precision(.fractionLength(2))) }
 }
+
+struct MapPoint: Decodable {
+    let name: String
+    let address: String?
+    let lat: Double
+    let lng: Double
+}
+
+struct MapMarker: Decodable, Identifiable {
+    let name: String
+    let address: String?
+    let lat: Double
+    let lng: Double
+    let count: Int
+    let departments: [String]
+    var id: String { "\(name)|\(lat)|\(lng)" }
+}
+
+struct MapStop: Decodable, Identifiable {
+    let order: Int
+    let name: String
+    let lat: Double
+    let lng: Double
+    let count: Int
+    var id: Int { order }
+}
+
+struct MapJourney: Decodable, Identifiable {
+    let id: Int
+    let label: String
+    let date: String
+    let time: String
+    let studentCount: Int
+    let stops: [MapStop]
+    let totalKm: Double
+    let allFinalised: Bool
+}
+
+struct MapData: Decodable {
+    let pickup: MapPoint
+    let markers: [MapMarker]
+    let journeys: [MapJourney]
+    let departments: [String]
+    let totalPlacements: Int
+    let totalSites: Int
+    let totalJourneys: Int
+
+    enum CodingKeys: String, CodingKey {
+        case pickup, markers, journeys, departments
+        case totalPlacements = "total_placements"
+        case totalSites = "total_sites"
+        case totalJourneys = "total_journeys"
+    }
+}
