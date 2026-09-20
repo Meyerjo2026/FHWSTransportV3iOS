@@ -26,6 +26,14 @@ Route::get('/', function () {
     };
 });
 
+Route::middleware('auth')->get('/dashboard', function () {
+    return match (Auth::user()->role) {
+        'admin' => redirect('/admin'),
+        'staff' => redirect('/staff'),
+        default => redirect('/student'),
+    };
+})->name('dashboard');
+
 Route::middleware('auth')->group(function () {
     Route::get('/force-password', [ForcePasswordController::class, 'show'])->name('password.force');
     Route::post('/force-password', [ForcePasswordController::class, 'update'])->name('password.force.update');
