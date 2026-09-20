@@ -19,6 +19,77 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
             <div class="cta">Visible to all staff</div>
         </div>
     </div>
+
+    <div class="card" style="max-width:680px;">
+        <h2>Create a staff member</h2>
+        @if ($errors->any())
+            <div class="msg error">{{ $errors->first() }}</div>
+        @endif
+        <form method="POST" action="/admin/group-assignments">
+            @csrf
+            <div class="grid">
+                <div class="field">
+                    <label>Name &amp; surname</label>
+                    <input name="name" placeholder="e.g. Thabo Mokoena" value="{{ old('name') }}" required>
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input name="email" type="email" placeholder="e.g. mokoent@cput.ac.za" value="{{ old('email') }}" required>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="field">
+                    <label>Responsible for qualification <span class="muted">(optional)</span></label>
+                    <select name="qualification">
+                        <option value="">— None —</option>
+                        @foreach ($qualifications as $qual)
+                            <option value="{{ $qual }}" @selected(old('qualification') === $qual)>{{ $qual }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Responsible for year <span class="muted">(optional)</span></label>
+                    <select name="year">
+                        <option value="">— None —</option>
+                        @foreach ($years as $year)
+                            <option value="{{ $year }}" @selected(old('year') === $year)>{{ $year }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <button class="btn" type="submit">Create staff member</button>
+            <p class="hint" style="margin-top:10px;">A temporary password is generated and shown after saving — the new staff member is asked to change it on first login. Responsible-for groups can be adjusted any time in the sections below.</p>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Staff members <span class="badge-count">{{ $staffMembers->count() }}</span></h2>
+        @if ($staffList->isEmpty())
+            <div class="empty">No staff members yet. Use the form above to add the first one.</div>
+        @else
+            <table>
+                <thead><tr><th>Name</th><th>Email</th><th>Responsible for</th></tr></thead>
+                <tbody>
+                    @foreach ($staffList as $entry)
+                        <tr>
+                            <td>{{ $entry['staff']->name }}</td>
+                            <td class="muted">{{ $entry['staff']->email }}</td>
+                            <td>
+                                @if ($entry['assignments']->isEmpty())
+                                    <span class="muted">Unassigned — sees unmatched requests only</span>
+                                @else
+                                    @foreach ($entry['assignments'] as $a)
+                                        <span class="pill" title="{{ $a['label'] }}" style="margin:0 4px 4px 0;">{{ $a['value'] }}</span>
+                                    @endforeach
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+    </div>
+
     @foreach ($sections as $section)
         <div class="card">
             <h2>{{ $section['label'] }} staff assignments</h2>

@@ -76,6 +76,7 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])->prefix('admin')->
     Route::post('/quotes', [AdminController::class, 'generateQuote']);
     Route::get('/quotes/{quote}', [AdminController::class, 'quoteShow']);
     Route::get('/group-assignments', [AdminController::class, 'groupAssignments']);
+    Route::post('/group-assignments', [AdminController::class, 'storeStaff']);
     Route::post('/group-assignments/{type}/{value}', [AdminController::class, 'updateGroupAssignment'])->where('value', '.*');
     Route::get('/sites', [AdminController::class, 'sites']);
     Route::post('/sites', [AdminController::class, 'storeSite']);

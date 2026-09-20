@@ -187,7 +187,7 @@ class StaffController extends Controller
      * A random temporary password using an unambiguous character set
      * (no 0/O/1/l/I) so it's easy to read off a printed list and type in.
      */
-    private static function generateTempPassword(int $length = 10): string
+    public static function generateTempPassword(int $length = 10): string
     {
         $alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
 

@@ -11,6 +11,7 @@ use App\Support\TransportOptions;
 use App\Support\TripGrouper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
@@ -38,6 +39,22 @@ class AdminController extends Controller
     {
         $staffMembers = User::where('role', 'staff')->orderBy('name')->get();
 
+        // Staff members with their assigned year/department/qualification
+        // groups, for the "Staff members" list on the same page.
+        $staffList = $staffMembers->map(function ($staff) {
+            return [
+                'staff' => $staff,
+                'assignments' => GroupAssignment::where('staff_id', $staff->id)
+                    ->orderBy('type')
+                    ->get()
+                    ->map(fn ($a) => [
+                        'type' => $a->type,
+                        'label' => self::ASSIGNMENT_TYPES[$a->type]['label'] ?? ucfirst($a->type),
+                        'value' => $a->value,
+                    ]),
+            ];
+        });
+
         $sections = collect(array_keys(self::ASSIGNMENT_TYPES))->map(function ($type) {
             $options = $this->assignmentOptions($type);
             $existing = GroupAssignment::with('staff')->where('type', $type)->get()->keyBy('value');
@@ -53,7 +70,50 @@ class AdminController extends Controller
             'user' => Auth::user(),
             'sections' => $sections,
             'staffMembers' => $staffMembers,
+            'staffList' => $staffList,
+            'qualifications' => TransportOptions::allQualifications(),
+            'years' => TransportOptions::YEAR_OPTIONS,
         ]);
+    }
+
+    public function storeStaff(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'qualification' => ['nullable', 'string', 'in:'.implode(',', TransportOptions::allQualifications())],
+            'year' => ['nullable', 'string', 'in:'.implode(',', TransportOptions::YEAR_OPTIONS)],
+        ]);
+
+        $tempPassword = StaffController::generateTempPassword();
+
+        $staff = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'role' => 'staff',
+            'password' => Hash::make($tempPassword),
+            'must_change_password' => true,
+        ]);
+
+        $assigned = [];
+        foreach (['year' => $data['year'] ?? null, 'qualification' => $data['qualification'] ?? null] as $type => $value) {
+            if (! $value) {
+                continue;
+            }
+            GroupAssignment::updateOrCreate(
+                ['type' => $type, 'value' => $value],
+                ['staff_id' => $staff->id]
+            );
+            $assigned[] = "{$value} ({$type})";
+        }
+
+        $message = "Created staff member {$data['name']} ({$data['email']}).";
+        if ($assigned) {
+            $message .= ' Responsible for: '.implode(', ', $assigned).'.';
+        }
+        $message .= " Temporary password: {$tempPassword} — the staff member must change it on first login.";
+
+        return back()->with('success', $message);
     }
 
     public function updateGroupAssignment(Request $request, string $type, string $value)
