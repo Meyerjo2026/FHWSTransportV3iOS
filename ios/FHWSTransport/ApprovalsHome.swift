@@ -6,6 +6,8 @@ struct ApprovalsHome: View {
         TabView {
             ApprovalsView()
                 .tabItem { Label("Approvals", systemImage: "checkmark.seal") }
+            BulkHome(kinds: [.trips, .students])
+                .tabItem { Label("Upload", systemImage: "square.and.arrow.up") }
             AccountView()
                 .tabItem { Label("Account", systemImage: "person.crop.circle") }
         }

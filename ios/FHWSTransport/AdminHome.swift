@@ -13,6 +13,8 @@ struct AdminHome: View {
                 .tabItem { Label("Map", systemImage: "map") }
             AdminQuotesView()
                 .tabItem { Label("RFQs", systemImage: "doc.text") }
+            BulkHome(kinds: [.trips, .sites])
+                .tabItem { Label("Upload", systemImage: "square.and.arrow.up") }
             AdminSitesView()
                 .tabItem { Label("Sites", systemImage: "cross.case") }
             AdminStaffView()

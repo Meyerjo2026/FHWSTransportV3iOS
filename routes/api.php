@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AdminApiController;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Controllers\Api\BulkApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [ApiController::class, 'login'])->middleware('throttle:10,1');
@@ -19,6 +20,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Staff + admin
     Route::get('/approvals', [ApiController::class, 'approvals']);
     Route::post('/requests/{tripRequest}/status', [ApiController::class, 'setStatus']);
+
+    // Bulk CSV uploads (role checked in the controller)
+    Route::post('/bulk/trips', [BulkApiController::class, 'trips']);
+    Route::post('/bulk/students', [BulkApiController::class, 'students']);
+    Route::post('/bulk/sites', [BulkApiController::class, 'sites']);
 
     // Admin
     Route::prefix('admin')->middleware('api.admin')->group(function () {

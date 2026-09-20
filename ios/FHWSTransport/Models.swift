@@ -302,3 +302,105 @@ struct MapData: Decodable {
         case totalJourneys = "total_journeys"
     }
 }
+
+enum BulkKind: String {
+    case trips, students, sites
+
+    var title: String {
+        switch self {
+        case .trips: "Upload Trips"
+        case .students: "Create Students"
+        case .sites: "Upload Sites"
+        }
+    }
+    var icon: String {
+        switch self {
+        case .trips: "bus"
+        case .students: "person.badge.plus"
+        case .sites: "cross.case"
+        }
+    }
+    var summary: String {
+        switch self {
+        case .trips: "Adds one approved trip per row. The site must match an existing clinical site name exactly. Dates use YYYY-MM-DD."
+        case .students: "Creates a student account per row with a temporary password. Existing emails are skipped."
+        case .sites: "Adds new clinical sites and updates existing ones by name."
+        }
+    }
+    var required: [String] {
+        switch self {
+        case .trips: ["site", "date", "time"]
+        case .students: ["name", "email"]
+        case .sites: ["name"]
+        }
+    }
+    var columns: String {
+        switch self {
+        case .trips: "name,email,number,site,date,time,department,qualification,year,notes"
+        case .students: "name,email,number"
+        case .sites: "name,address,type,lat,lng"
+        }
+    }
+    var templateRow: String {
+        switch self {
+        case .trips: "Thandi Nkosi,thandi@mycput.ac.za,0821234567,Groote Schuur Hospital,2026-10-05,06:00 - 18:00,Emergency Medical Sciences,Diploma in Emergency Care,Year 2,"
+        case .students: "Thandi Nkosi,thandi@mycput.ac.za,0821234567"
+        case .sites: "Example Clinic,1 Main Rd Cape Town,Clinic,-33.93,18.64"
+        }
+    }
+    var template: String { columns + "\n" + templateRow + "\n" }
+}
+
+struct SkippedRow: Decodable, Identifiable {
+    let line: Int
+    let reason: String
+    var id: Int { line }
+}
+
+struct TripUploadResult: Decodable {
+    let created: Int
+    let skipped: [SkippedRow]
+    let skippedCount: Int
+    let unknownSites: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case created, skipped
+        case skippedCount = "skipped_count"
+        case unknownSites = "unknown_sites"
+    }
+}
+
+struct NewStudent: Decodable, Identifiable {
+    let name: String
+    let email: String
+    let number: String
+    let password: String
+    var id: String { email }
+}
+
+struct StudentUploadResult: Decodable {
+    let created: [NewStudent]
+    let skipped: [SkippedRow]
+    let skippedCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case created, skipped
+        case skippedCount = "skipped_count"
+    }
+
+    var credentialsCSV: String {
+        "name,email,number,temporary_password\n" + created.map { "\($0.name),\($0.email),\($0.number),\($0.password)" }.joined(separator: "\n")
+    }
+}
+
+struct SiteUploadResult: Decodable {
+    let added: Int
+    let updated: Int
+    let skipped: [SkippedRow]
+    let skippedCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case added, updated, skipped
+        case skippedCount = "skipped_count"
+    }
+}

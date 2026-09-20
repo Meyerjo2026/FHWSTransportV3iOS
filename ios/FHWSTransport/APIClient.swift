@@ -102,6 +102,32 @@ struct APIClient {
         return try await send("GET", "admin/map?" + q.joined(separator: "&"))
     }
 
+    // MARK: Bulk uploads
+    func upload<T: Decodable>(_ kind: BulkKind, csv: Data, filename: String) async throws -> T {
+        guard let url = URL(string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) + "/api/bulk/" + kind.rawValue) else {
+            throw APIError.badURL
+        }
+        let boundary = "Boundary-" + UUID().uuidString
+        var body = Data()
+        body.append("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(filename.replacingOccurrences(of: "\"", with: ""))\"\r\nContent-Type: text/csv\r\n\r\n".data(using: .utf8)!)
+        body.append(csv)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+
+        var req = URLRequest(url: url, timeoutInterval: 120)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        let (data, resp) = try await URLSession.shared.upload(for: req, from: body)
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        if code == 401 { throw APIError.unauthorized }
+        guard (200..<300).contains(code) else {
+            let msg = (try? JSONDecoder().decode(ErrorBody.self, from: data))?.message
+            throw APIError.server(msg ?? "Upload failed (\(code)).")
+        }
+        return try JSONDecoder().decode(T.self, from: data)
+    }
+
     private func send<T: Decodable>(_ method: String, _ path: String, body: (some Encodable)? = nil as String?) async throws -> T {
         guard let url = URL(string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) + "/api/" + path) else {
             throw APIError.badURL
