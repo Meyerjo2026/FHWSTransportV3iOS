@@ -151,6 +151,39 @@ tr:hover td{background:#fafafa;}
 .tabbar a:hover{color:var(--ink);}
 .tabbar a.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.1);}
 
+/* ── Segmented control ───────────────────────────────────── */
+.segmented{
+  display:inline-flex;background:#f2f2f7;border-radius:12px;padding:4px;gap:4px;width:100%;
+}
+.segmented-option{flex:1;cursor:pointer;border-radius:9px;transition:background .15s,box-shadow .15s;margin:0;}
+.segmented-option input{position:absolute;opacity:0;pointer-events:none;}
+.segmented-option span{
+  display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 10px;font-size:13px;font-weight:500;
+  color:var(--muted);border-radius:9px;
+}
+.segmented-option:hover span{color:var(--ink);}
+.segmented-option input:checked + span{
+  background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.1);
+}
+.segmented-option .pill{font-size:11px;padding:2px 8px;}
+
+/* ── Stat tiles (dashboard) ──────────────────────────────── */
+.stat-tile{
+  background:var(--card);border:1px solid var(--border-soft);border-radius:18px;padding:20px 22px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;
+}
+.stat-tile:hover{border-color:rgba(153,51,153,.35);}
+.stat-tile .kicker{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;}
+.stat-tile .number{font-size:30px;font-weight:700;line-height:1;letter-spacing:-.03em;}
+.stat-tile .number small{font-size:14px;color:var(--muted);font-weight:500;}
+.stat-tile .cta{font-size:12px;font-weight:600;margin-top:4px;}
+.stat-tile.pending .cta{color:var(--amber);}
+.stat-tile.approved .cta{color:var(--green);}
+.stat-tile.finalised .cta{color:var(--primary);}
+.stat-tile.rejected .cta{color:var(--red);}
+.stat-tile.total .cta{color:var(--ink);}
+.stat-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;}
+
 /* ── Messages / helpers ──────────────────────────────────── */
 .msg{font-size:13px;padding:11px 14px;border-radius:12px;margin-bottom:14px;border:1px solid currentColor;font-weight:500;}
 .msg.error{color:var(--red);background:rgba(255,59,48,.06);}

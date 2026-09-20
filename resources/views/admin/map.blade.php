@@ -116,7 +116,7 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
         const pickup = @json($pickup);
         const markers = @json($markers);
         const journeys = @json($journeys);
-        const routeColors = ['#8e3a92', '#1c8a5c', '#c8503f', '#b6791a', '#2f6fed', '#0f766e'];
+        const routeColors = ['#993399', '#802b80', '#a44ca4', '#4a1fae', '#7d3f98', '#b44db4'];
 
         const map = L.map('placement-map').setView([pickup.lat, pickup.lng], 10);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -126,7 +126,7 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
 
         const pickupIcon = L.divIcon({
             className: '',
-            html: '<div style="background:#1c1622;color:#fff;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);">' + pickup.name + '</div>',
+            html: '<div style="background:#241a2e;color:#fff;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);">' + pickup.name + '</div>',
             iconSize: [0, 0],
         });
         L.marker([pickup.lat, pickup.lng], {icon: pickupIcon}).addTo(map);
@@ -179,9 +179,9 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
             const radius = Math.min(10 + m.count * 2, 34);
             const circle = L.circleMarker([m.lat, m.lng], {
                 radius,
-                color: '#6f2c73',
+                color: '#802b80',
                 weight: 2,
-                fillColor: '#8e3a92',
+                fillColor: '#993399',
                 fillOpacity: 0.55,
             }).addTo(map);
             const popupBase = '<strong>' + m.name + '</strong><br>' +
@@ -193,14 +193,14 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
             bounds.push([m.lat, m.lng]);
 
             const fallback = L.polyline([[pickup.lat, pickup.lng], [m.lat, m.lng]], {
-                color: '#8e3a92', weight: 1, opacity: 0.35, dashArray: '4,5',
+                color: '#993399', weight: 1, opacity: 0.35, dashArray: '4,5',
             }).addTo(map);
 
             routeTasks.push(async () => {
                 const route = await fetchRoadRoute([pickup, m]);
                 if (!route) return;
                 map.removeLayer(fallback);
-                L.polyline(route.latlngs, { color: '#8e3a92', weight: 2, opacity: 0.6 }).addTo(map);
+                L.polyline(route.latlngs, { color: '#993399', weight: 2, opacity: 0.6 }).addTo(map);
                 circle.bindPopup(popupBase + '<br><span style="color:#6b6478;">~' + route.distanceKm + 'km by road, ~' + route.durationMin + ' min</span>');
             });
         });

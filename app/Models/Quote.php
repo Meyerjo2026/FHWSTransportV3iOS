@@ -11,8 +11,21 @@ class Quote extends Model
         'period',
         'rate',
         'total',
+        'is_tbc',
         'created_by',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_tbc' => 'boolean',
+        ];
+    }
+
+    public function isPriced(): bool
+    {
+        return $this->rate !== null;
+    }
 
     public function items()
     {

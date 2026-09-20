@@ -22,6 +22,13 @@ class DashboardController extends Controller
         $departmentStats = $this->breakdown('department');
         $qualificationStats = $this->breakdown('qualification');
 
+        $recent = TripRequest::query()
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
+        $awaitingQuote = TripRequest::where('status', 'finalised')->whereNull('quote_id')->count();
+
         return view('admin.dashboard', [
             'user' => Auth::user(),
             'statusCounts' => $statusCounts,
@@ -29,6 +36,8 @@ class DashboardController extends Controller
             'qualificationStats' => $qualificationStats,
             'statuses' => self::STATUSES,
             'totalRequests' => TripRequest::count(),
+            'recent' => $recent,
+            'awaitingQuote' => $awaitingQuote,
         ]);
     }
 

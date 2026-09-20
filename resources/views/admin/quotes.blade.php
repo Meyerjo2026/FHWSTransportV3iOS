@@ -10,15 +10,29 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
         @endif
         <form method="POST" action="/admin/quotes">
             @csrf
-            <div class="grid">
+            <div class="grid" style="grid-template-columns:1fr 1fr;">
                 <div class="field">
                     <label>RFQ / period label</label>
                     <input name="period" placeholder="e.g. May 2026" required>
                 </div>
                 <div class="field">
-                    <label>Rate per trip (ZAR)</label>
-                    <input name="rate" type="number" step="0.01" value="{{ $defaultRate }}" required>
+                    <label>Pricing mode</label>
+                    <div class="segmented" role="radiogroup" aria-label="Pricing mode">
+                        <label class="segmented-option" data-mode="rate">
+                            <input type="radio" name="pricing" value="rate" checked>
+                            <span>With rate <span class="pill approved">money</span></span>
+                        </label>
+                        <label class="segmented-option" data-mode="tbc">
+                            <input type="radio" name="pricing" value="tbc">
+                            <span>Without rate <span class="pill pending">TBC</span></span>
+                        </label>
+                    </div>
+                    <div class="hint">"Without rate" sends the trip list to the supplier with the price left open to be calculated &amp; confirmed.</div>
                 </div>
+            </div>
+            <div class="field" id="rate-field" style="max-width:320px;">
+                <label>Rate per trip (ZAR)</label>
+                <input name="rate" type="number" step="0.01" value="{{ $defaultRate }}">
             </div>
             <button class="btn" type="submit" style="margin-top:10px;">Create RFQ</button>
         </form>
@@ -52,9 +66,9 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
                     @foreach ($quotes as $q)
                         <tr>
                             <td>{{ $q->ref }}</td>
-                            <td>{{ $q->period }}</td>
+                            <td>{{ $q->period }} @if ($q->is_tbc) <span class="pill pending">TBC</span> @endif</td>
                             <td>{{ $q->created_at->format('d M Y') }}</td>
-                            <td>R {{ number_format($q->total, 2) }}</td>
+                            <td>{{ $q->isPriced() ? 'R '.number_format($q->total, 2) : 'To be calculated' }}</td>
                             <td><a class="btn small secondary" href="/admin/quotes/{{ $q->id }}">View</a></td>
                         </tr>
                     @endforeach
@@ -62,4 +76,20 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
             </table>
         @endif
     </div>
+    <script>
+        document.querySelectorAll('.segmented-option input[name=pricing]').forEach((radio) => {
+            radio.addEventListener('change', () => {
+                const rateField = document.getElementById('rate-field');
+                const rateInput = rateField.querySelector('input[name=rate]');
+                if (radio.value === 'tbc') {
+                    rateField.style.display = 'none';
+                    rateInput.removeAttribute('required');
+                    rateInput.value = '';
+                } else {
+                    rateField.style.display = '';
+                    rateInput.setAttribute('required', 'required');
+                }
+            });
+        });
+    </script>
 </x-shell>

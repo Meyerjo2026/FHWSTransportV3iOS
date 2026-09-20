@@ -2,6 +2,23 @@
 $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/admin/review' => 'Approve / Reject', '/admin/journeys' => 'AI Trip Planner', '/admin/finalise' => 'Finalise Trips', '/admin/quotes' => 'Create RFQ', '/admin/sites' => 'Clinical Sites', '/admin/map' => 'Map', '/admin/group-assignments' => 'Staff Assignments'];
 @endphp
 <x-shell :user="$user" :active="'/admin/sites'" :tabs="$tabs">
+    <div class="stat-tiles" style="margin-bottom:20px;">
+        <div class="stat-tile total">
+            <div class="kicker">Clinical sites</div>
+            <div class="number">{{ $sites->count() }}</div>
+            <div class="cta">{{ $typeOptions->count() }} categories</div>
+        </div>
+        <div class="stat-tile approved">
+            <div class="kicker">Active</div>
+            <div class="number">{{ $sites->where('active', true)->count() }}</div>
+            <div class="cta">Offerable to students</div>
+        </div>
+        <div class="stat-tile finalised">
+            <div class="kicker">With coordinates</div>
+            <div class="number">{{ $sites->whereNotNull('lat')->count() }}</div>
+            <div class="cta">Ready for the map</div>
+        </div>
+    </div>
     <div class="card" style="max-width:640px;">
         <h2>Add a clinical site</h2>
         @if ($errors->any())

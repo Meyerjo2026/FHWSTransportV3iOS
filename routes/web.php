@@ -69,6 +69,7 @@ Route::middleware(['auth', 'password.changed', 'role:staff,admin'])
 Route::middleware(['auth', 'password.changed', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'consolidate']);
     Route::get('/review', [AdminController::class, 'review']);
+    Route::post('/review/bulk', [AdminController::class, 'bulkStatus']);
     Route::get('/finalise', [AdminController::class, 'finaliseForm']);
     Route::post('/finalise', [AdminController::class, 'finalise']);
     Route::get('/quotes', [AdminController::class, 'quotesIndex']);

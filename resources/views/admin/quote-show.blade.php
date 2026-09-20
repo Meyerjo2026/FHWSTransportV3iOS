@@ -11,7 +11,7 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
             <div style="text-align:right;font-size:13px;">
                 <div><strong>Ref:</strong> {{ $quote->ref }}</div>
                 <div><strong>Date:</strong> {{ $quote->created_at->format('Y/m/d') }}</div>
-                <div><strong>Period:</strong> {{ $quote->period }}</div>
+                <div><strong>Period:</strong> {{ $quote->period }} @if ($quote->is_tbc) <span class="pill pending">rate TBC</span> @endif</div>
             </div>
         </div>
         <table style="margin-top:16px;">
@@ -22,13 +22,21 @@ $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/a
                         <td>{{ $i + 1 }}</td>
                         <td>{{ \Carbon\Carbon::parse($g['date'])->format('d M Y') }} {{ $g['time'] }} - {{ $g['site'] }} and return - 7-Seater{{ $g['tripParts'] > 1 ? " (Trip {$g['tripPart']} of {$g['tripParts']})" : '' }}</td>
                         <td>{{ $g['items']->count() }},00 TRIP</td>
-                        <td>R {{ number_format($quote->rate, 2) }}</td>
-                        <td>R {{ number_format($quote->rate * $g['items']->count(), 2) }}</td>
+                        @if ($quote->isPriced())
+                            <td>R {{ number_format($quote->rate, 2) }}</td>
+                            <td>R {{ number_format($quote->rate * $g['items']->count(), 2) }}</td>
+                        @else
+                            <td colspan="2" class="muted" style="text-align:center;">To be calculated</td>
+                        @endif
                     </tr>
                 @endforeach
             </tbody>
         </table>
-        <div class="invoice-total">Total (ZAR): R {{ number_format($quote->total, 2) }}</div>
+        @if ($quote->isPriced())
+            <div class="invoice-total">Total (ZAR): R {{ number_format($quote->total, 2) }}</div>
+        @else
+            <div class="invoice-total">Total (ZAR): To be calculated <span class="muted" style="font-weight:400;font-size:13px;">&mdash; rate to be confirmed by supplier</span></div>
+        @endif
         <div class="no-print" style="margin-top:14px;">
             <button class="btn secondary" onclick="window.print()">Print / Save PDF</button>
         </div>

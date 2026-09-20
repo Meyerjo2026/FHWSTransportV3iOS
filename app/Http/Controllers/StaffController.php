@@ -56,7 +56,7 @@ class StaffController extends Controller
     public function setStatus(Request $request, TripRequest $tripRequest)
     {
         $data = $request->validate([
-            'status' => ['required', 'in:approved,rejected'],
+            'status' => ['required', 'in:approved,rejected,pending'],
         ]);
 
         $tripRequest->update(['status' => $data['status']]);

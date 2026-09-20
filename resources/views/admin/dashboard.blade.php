@@ -1,21 +1,60 @@
 @php
 $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/admin/review' => 'Approve / Reject', '/admin/journeys' => 'AI Trip Planner', '/admin/finalise' => 'Finalise Trips', '/admin/quotes' => 'Create RFQ', '/admin/sites' => 'Clinical Sites', '/admin/map' => 'Map', '/admin/group-assignments' => 'Staff Assignments'];
+$pending = $statusCounts->get('pending', 0);
+$approved = $statusCounts->get('approved', 0);
+$finalised = $statusCounts->get('finalised', 0);
+$rejected = $statusCounts->get('rejected', 0);
 @endphp
 <x-shell :user="$user" :active="'/admin/dashboard'" :tabs="$tabs">
+    <div class="stat-tiles">
+        <a class="stat-tile total" href="/admin">
+            <div class="kicker">All requests</div>
+            <div class="number">{{ $totalRequests }}</div>
+            <div class="cta">Consolidate trips &rarr;</div>
+        </a>
+        <a class="stat-tile pending" href="/admin/review">
+            <div class="kicker">Pending approval</div>
+            <div class="number">{{ $pending }}</div>
+            <div class="cta">Approve / reject &rarr;</div>
+        </a>
+        <a class="stat-tile approved" href="/admin/finalise">
+            <div class="kicker">Approved · awaiting finalise</div>
+            <div class="number">{{ $approved }}</div>
+            <div class="cta">Finalise trips &rarr;</div>
+        </a>
+        <a class="stat-tile finalised" href="/admin/quotes">
+            <div class="kicker">Finalised · awaiting RFQ</div>
+            <div class="number">{{ $awaitingQuote }}</div>
+            <div class="cta">Create RFQ &rarr;</div>
+        </a>
+        <a class="stat-tile rejected" href="/admin/review?filter=rejected">
+            <div class="kicker">Rejected</div>
+            <div class="number">{{ $rejected }}</div>
+            <div class="cta">Review history</div>
+        </a>
+    </div>
+
     <div class="card">
-        <h2>Overview</h2>
-        <div class="grid">
-            <div class="field" style="margin:0;">
-                <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.03em;">Total requests</div>
-                <div style="font-size:24px;font-weight:700;">{{ $totalRequests }}</div>
-            </div>
-            @foreach ($statuses as $status)
-                <div class="field" style="margin:0;">
-                    <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.03em;">{{ ucfirst($status) }}</div>
-                    <div style="font-size:24px;font-weight:700;">{{ $statusCounts->get($status, 0) }}</div>
-                </div>
-            @endforeach
-        </div>
+        <h2>Recent requests</h2>
+        @if ($recent->isEmpty())
+            <div class="empty">No requests yet.</div>
+        @else
+            <table>
+                <thead><tr><th>Student</th><th>Site</th><th>Date</th><th>Time</th><th>Department</th><th>Status</th></tr></thead>
+                <tbody>
+                    @foreach ($recent as $r)
+                        <tr>
+                            <td>{{ $r->student_name }}</td>
+                            <td class="muted">{{ $r->site }}</td>
+                            <td>{{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}</td>
+                            <td class="muted">{{ $r->time }}</td>
+                            <td class="muted">{{ $r->department }}</td>
+                            <td><span class="pill {{ $r->status }}">{{ $r->status }}</span></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
     </div>
 
     <div class="card">

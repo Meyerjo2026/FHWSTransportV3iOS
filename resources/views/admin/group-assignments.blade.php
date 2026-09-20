@@ -2,6 +2,23 @@
 $tabs = ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/admin/review' => 'Approve / Reject', '/admin/journeys' => 'AI Trip Planner', '/admin/finalise' => 'Finalise Trips', '/admin/quotes' => 'Create RFQ', '/admin/sites' => 'Clinical Sites', '/admin/map' => 'Map', '/admin/group-assignments' => 'Staff Assignments'];
 @endphp
 <x-shell :user="$user" :active="'/admin/group-assignments'" :tabs="$tabs">
+    <div class="stat-tiles" style="margin-bottom:20px;">
+        <div class="stat-tile total">
+            <div class="kicker">Staff members</div>
+            <div class="number">{{ $staffMembers->count() }}</div>
+            <div class="cta">Registered on the platform</div>
+        </div>
+        <div class="stat-tile approved">
+            <div class="kicker">Groups covered</div>
+            <div class="number">{{ $sections->sum(fn ($s) => $s['assignments']->filter()->count()) }}</div>
+            <div class="cta">Year / department / qualification</div>
+        </div>
+        <div class="stat-tile pending">
+            <div class="kicker">Groups unassigned</div>
+            <div class="number">{{ $sections->sum(fn ($s) => $s['assignments']->filter(fn ($a) => $a === null)->count()) }}</div>
+            <div class="cta">Visible to all staff</div>
+        </div>
+    </div>
     @foreach ($sections as $section)
         <div class="card">
             <h2>{{ $section['label'] }} staff assignments</h2>

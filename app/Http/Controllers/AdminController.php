@@ -194,16 +194,46 @@ class AdminController extends Controller
         ]);
     }
 
-    public function review()
+    public function review(Request $request)
     {
+        $filter = in_array($request->query('filter'), ['pending', 'approved', 'rejected', ''], true)
+            ? $request->query('filter', '')
+            : '';
+
         $pending = TripRequest::where('status', 'pending')->orderBy('date')->get();
         $approved = TripRequest::where('status', 'approved')->orderBy('date')->get();
+        $rejected = TripRequest::where('status', 'rejected')->orderByDesc('updated_at')->get();
 
         return view('admin.review', [
             'user' => Auth::user(),
             'pending' => $pending,
             'approved' => $approved,
+            'rejected' => $rejected,
+            'filter' => $filter,
         ]);
+    }
+
+    public function bulkStatus(Request $request)
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:approved,rejected,pending'],
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $count = TripRequest::whereIn('id', $data['ids'])
+            ->where('status', '!=', 'finalised')
+            ->count();
+
+        TripRequest::whereIn('id', $data['ids'])
+            ->where('status', '!=', 'finalised')
+            ->update(['status' => $data['status']]);
+
+        if ($count) {
+            return back()->with('success', "Updated {$count} trip(s) to \"{$data['status']}\".");
+        }
+
+        return back()->with('error', 'No eligible trips were selected.');
     }
 
     public function finaliseForm()
@@ -247,7 +277,8 @@ class AdminController extends Controller
     {
         $data = $request->validate([
             'period' => ['required', 'string'],
-            'rate' => ['required', 'numeric'],
+            'pricing' => ['required', 'in:rate,tbc'],
+            'rate' => ['required_if:pricing,rate', 'numeric'],
         ]);
 
         $finalised = TripRequest::where('status', 'finalised')->whereNull('quote_id')->get();
@@ -255,16 +286,35 @@ class AdminController extends Controller
             return back()->with('error', 'No finalised trips awaiting a quote.');
         }
 
+        $isTbc = $data['pricing'] === 'tbc';
         $groups = TripGrouper::group($finalised);
-        $total = $groups->sum(fn ($g) => $data['rate'] * $g['items']->count());
 
-        $quote = Quote::create([
-            'ref' => 'RFQ'.(1000 + Quote::count() + 1),
-            'period' => $data['period'],
-            'rate' => $data['rate'],
-            'total' => $total,
-            'created_by' => Auth::user()->name,
-        ]);
+        if ($isTbc) {
+            // "Without money" variant: the rate is deliberately left open
+            // ("to be calculated / confirmed") rather than billed at a
+            // fixed per-trip amount. The RFQ still lists every trip line
+            // so the supplier can price it.
+            $quote = Quote::create([
+                'ref' => 'RFQ'.(1000 + Quote::count() + 1),
+                'period' => $data['period'],
+                'rate' => null,
+                'total' => null,
+                'is_tbc' => true,
+                'created_by' => Auth::user()->name,
+            ]);
+        } else {
+            $rate = $data['rate'];
+            $total = $groups->sum(fn ($g) => $rate * $g['items']->count());
+
+            $quote = Quote::create([
+                'ref' => 'RFQ'.(1000 + Quote::count() + 1),
+                'period' => $data['period'],
+                'rate' => $rate,
+                'total' => $total,
+                'is_tbc' => false,
+                'created_by' => Auth::user()->name,
+            ]);
+        }
 
         TripRequest::whereIn('id', $finalised->pluck('id'))->update(['quote_id' => $quote->id]);
 
