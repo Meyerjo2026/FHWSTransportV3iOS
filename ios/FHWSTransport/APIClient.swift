@@ -86,6 +86,14 @@ struct APIClient {
     func cancelJourney(id: Int) async throws { let _: OK = try await send("DELETE", "admin/journeys/\(id)") }
     private struct Created: Decodable { let id: Int }
 
+    private struct QuoteBody: Encodable { let period, pricing: String; let rate: Double? }
+    func quotes() async throws -> QuotesOverview { try await send("GET", "admin/quotes") }
+    func quote(id: Int) async throws -> QuoteDetail { try await send("GET", "admin/quotes/\(id)") }
+    func createQuote(period: String, rate: Double?) async throws -> Int {
+        let body = QuoteBody(period: period, pricing: rate == nil ? "tbc" : "rate", rate: rate)
+        return (try await send("POST", "admin/quotes", body: body) as QuoteSummary).id
+    }
+
     private func send<T: Decodable>(_ method: String, _ path: String, body: (some Encodable)? = nil as String?) async throws -> T {
         guard let url = URL(string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) + "/api/" + path) else {
             throw APIError.badURL

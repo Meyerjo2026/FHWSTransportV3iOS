@@ -7,10 +7,12 @@ use App\Http\Controllers\StaffController;
 use App\Models\ClinicalSite;
 use App\Models\GroupAssignment;
 use App\Models\Journey;
+use App\Models\Quote;
 use App\Models\TripRequest;
 use App\Models\User;
 use App\Support\JourneyPlanner;
 use App\Support\TransportOptions;
+use App\Support\TripGrouper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -243,6 +245,89 @@ class AdminApiController extends Controller
         $journey->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    public function quotes(): JsonResponse
+    {
+        $awaiting = TripRequest::where('status', 'finalised')->whereNull('quote_id')->get();
+
+        return response()->json([
+            'default_rate' => TransportOptions::DEFAULT_RATE,
+            'awaiting_trips' => $awaiting->count(),
+            'awaiting_lines' => TripGrouper::group($awaiting)->map(fn ($g) => self::line($g))->values(),
+            'quotes' => Quote::orderByDesc('created_at')->get()->map(fn ($q) => self::quote($q)),
+        ]);
+    }
+
+    public function storeQuote(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'period' => ['required', 'string', 'max:100'],
+            'pricing' => ['required', 'in:rate,tbc'],
+            'rate' => ['required_if:pricing,rate', 'nullable', 'numeric', 'min:0'],
+        ]);
+
+        $finalised = TripRequest::where('status', 'finalised')->whereNull('quote_id')->get();
+        if ($finalised->isEmpty()) {
+            return response()->json(['message' => 'No finalised trips awaiting a quote.'], 422);
+        }
+
+        $tbc = $data['pricing'] === 'tbc';
+        $rate = $tbc ? null : (float) $data['rate'];
+        $lines = TripGrouper::group($finalised);
+
+        $quote = DB::transaction(function () use ($data, $tbc, $rate, $lines, $finalised) {
+            $q = Quote::create([
+                'ref' => 'RFQ'.(1000 + Quote::count() + 1),
+                'period' => $data['period'],
+                'rate' => $rate,
+                'total' => $tbc ? null : $lines->sum(fn ($g) => $rate * $g['items']->count()),
+                'is_tbc' => $tbc,
+                'created_by' => Auth::user()->name,
+            ]);
+            TripRequest::whereIn('id', $finalised->pluck('id'))->update(['quote_id' => $q->id]);
+
+            return $q;
+        });
+
+        return response()->json(self::quote($quote), 201);
+    }
+
+    public function showQuote(Quote $quote): JsonResponse
+    {
+        $lines = TripGrouper::group(TripRequest::where('quote_id', $quote->id)->get());
+
+        return response()->json(self::quote($quote) + [
+            'lines' => $lines->map(fn ($g) => self::line($g, $quote))->values(),
+        ]);
+    }
+
+    private static function line(array $g, ?Quote $quote = null): array
+    {
+        $qty = $g['items']->count();
+
+        return [
+            'date' => substr((string) $g['date'], 0, 10),
+            'time' => $g['time'],
+            'site' => $g['site'],
+            'part' => $g['tripParts'] > 1 ? "Trip {$g['tripPart']} of {$g['tripParts']}" : null,
+            'qty' => $qty,
+            'unit_price' => $quote?->isPriced() ? (float) $quote->rate : null,
+            'extended' => $quote?->isPriced() ? (float) $quote->rate * $qty : null,
+        ];
+    }
+
+    private static function quote(Quote $q): array
+    {
+        return [
+            'id' => $q->id,
+            'ref' => $q->ref,
+            'period' => $q->period,
+            'date' => $q->created_at->format('Y/m/d'),
+            'is_tbc' => (bool) $q->is_tbc,
+            'rate' => $q->rate !== null ? (float) $q->rate : null,
+            'total' => $q->total !== null ? (float) $q->total : null,
+        ];
     }
 
     private function revokeAccess(User $u): void
