@@ -25,6 +25,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [AdminApiController::class, 'dashboard']);
         Route::get('/review', [AdminApiController::class, 'review']);
         Route::post('/review/bulk', [AdminApiController::class, 'bulkStatus']);
+        Route::get('/journeys', [AdminApiController::class, 'journeys']);
+        Route::post('/journeys', [AdminApiController::class, 'storeJourney']);
+        Route::delete('/journeys/{journey}', [AdminApiController::class, 'destroyJourney']);
         Route::get('/sites', [AdminApiController::class, 'sites']);
         Route::post('/sites', [AdminApiController::class, 'storeSite']);
         Route::post('/sites/{site}', [AdminApiController::class, 'updateSite']);

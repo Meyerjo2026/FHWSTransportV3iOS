@@ -124,3 +124,50 @@ struct StaffMember: Decodable, Identifiable {
     let active: Bool
     let assignments: [String]
 }
+
+struct JourneySuggestion: Decodable, Identifiable {
+    let key: String
+    let date: String
+    let time: String
+    let studentCount: Int
+    let maxSpanKm: Double
+    let totalKm: Double
+    let stops: [String]
+    let tripRequestIds: [Int]
+    var id: String { key }
+
+    enum CodingKeys: String, CodingKey {
+        case key, date, time, stops
+        case studentCount = "student_count"
+        case maxSpanKm = "max_span_km"
+        case totalKm = "total_km"
+        case tripRequestIds = "trip_request_ids"
+    }
+}
+
+struct ActiveJourney: Decodable, Identifiable {
+    let id: Int
+    let label: String
+    let date: String
+    let time: String
+    let tripCount: Int
+    let locked: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id, label, date, time, locked
+        case tripCount = "trip_count"
+    }
+}
+
+struct JourneyPlan: Decodable {
+    let threshold: Double
+    let maxPerTrip: Int
+    let eligible: Int
+    let suggestions: [JourneySuggestion]
+    let active: [ActiveJourney]
+
+    enum CodingKeys: String, CodingKey {
+        case threshold, eligible, suggestions, active
+        case maxPerTrip = "max_per_trip"
+    }
+}

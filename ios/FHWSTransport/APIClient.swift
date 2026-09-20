@@ -73,6 +73,19 @@ struct APIClient {
     func toggleStaff(id: Int) async throws { let _: Toggled = try await send("POST", "admin/staff/\(id)/toggle") }
     func deleteStaff(id: Int) async throws { let _: OK = try await send("DELETE", "admin/staff/\(id)") }
 
+    private struct JourneyBody: Encodable {
+        let trip_request_ids: [Int]; let date, time, label: String; let threshold: Double
+    }
+    func journeys(threshold: Double) async throws -> JourneyPlan {
+        try await send("GET", "admin/journeys?threshold=\(threshold)")
+    }
+    func combine(_ s: JourneySuggestion, label: String, threshold: Double) async throws {
+        let body = JourneyBody(trip_request_ids: s.tripRequestIds, date: s.date, time: s.time, label: label, threshold: threshold)
+        let _: Created = try await send("POST", "admin/journeys", body: body)
+    }
+    func cancelJourney(id: Int) async throws { let _: OK = try await send("DELETE", "admin/journeys/\(id)") }
+    private struct Created: Decodable { let id: Int }
+
     private func send<T: Decodable>(_ method: String, _ path: String, body: (some Encodable)? = nil as String?) async throws -> T {
         guard let url = URL(string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) + "/api/" + path) else {
             throw APIError.badURL

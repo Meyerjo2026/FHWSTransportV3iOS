@@ -7,6 +7,8 @@ struct AdminHome: View {
                 .tabItem { Label("Dashboard", systemImage: "chart.bar") }
             AdminReviewView()
                 .tabItem { Label("Review", systemImage: "checkmark.seal") }
+            AdminPlannerView()
+                .tabItem { Label("Planner", systemImage: "point.topleft.down.to.point.bottomright.curvepath") }
             AdminSitesView()
                 .tabItem { Label("Sites", systemImage: "cross.case") }
             AdminStaffView()
