@@ -33,16 +33,21 @@ struct AdminDashboardView: View {
             List {
                 if let error { Text(error).foregroundStyle(.red) }
                 if let d = data {
-                    Section("Requests (\(d.total))") {
-                        ForEach(["pending", "approved", "rejected", "finalised"], id: \.self) { s in
-                            HStack {
-                                StatusBadge(status: s)
-                                Spacer()
-                                Text("\(d.statusCounts[s] ?? 0)").monospacedDigit()
+                    Section {
+                        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                            ForEach(["pending", "approved", "rejected", "finalised"], id: \.self) { s in
+                                StatTile(title: s.capitalized, value: d.statusCounts[s] ?? 0, color: Theme.statusColor(s))
                             }
                         }
-                        if d.awaitingQuote > 0 {
-                            LabeledContent("Finalised, awaiting RFQ", value: "\(d.awaitingQuote)")
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                    } header: {
+                        Text("\(d.total) requests in total")
+                    }
+                    if d.awaitingQuote > 0 {
+                        Section {
+                            Label("\(d.awaitingQuote) finalised trip\(d.awaitingQuote == 1 ? "" : "s") awaiting an RFQ", systemImage: "doc.text")
+                                .font(.brand(.subheadline))
                         }
                     }
                     Section("By department") {
@@ -54,6 +59,7 @@ struct AdminDashboardView: View {
                 }
             }
             .overlay { if data == nil && error == nil { ProgressView() } }
+            .brandBackground()
             .navigationTitle("Dashboard")
             .refreshable { await load() }
             .task { await load() }
@@ -93,6 +99,7 @@ struct AdminReviewView: View {
                 .background(.bar)
             }
             .overlay { if trips.isEmpty && error == nil { ContentUnavailableView("Nothing here", systemImage: "tray") } }
+            .brandBackground()
             .navigationTitle("Review")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -150,11 +157,11 @@ struct AdminSitesView: View {
                     Button { editing = site } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             HStack {
-                                Text(site.name).font(.headline).foregroundStyle(site.active ? Color.primary : .secondary)
-                                if !site.active { Text("Inactive").font(.caption2).foregroundStyle(.orange) }
+                                Text(site.name).font(.brand(.headline)).foregroundStyle(site.active ? Color.primary : .secondary)
+                                if !site.active { Text("Inactive").font(.brand(.caption2)).foregroundStyle(.orange) }
                             }
                             Text([site.type, site.address].compactMap { $0 }.joined(separator: " · "))
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.brand(.caption)).foregroundStyle(.secondary)
                         }
                     }
                     .swipeActions {
@@ -166,6 +173,7 @@ struct AdminSitesView: View {
             }
             .searchable(text: $search)
             .overlay { if data == nil && error == nil { ProgressView() } }
+            .brandBackground()
             .navigationTitle("Clinical Sites")
             .toolbar { Button("Add", systemImage: "plus") { adding = true } }
             .sheet(item: $editing) { site in
@@ -215,6 +223,7 @@ struct SiteForm: View {
                 }
                 if let error { Text(error).foregroundStyle(.red) }
             }
+            .brandBackground()
             .navigationTitle(site == nil ? "Add Site" : "Edit Site")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -256,12 +265,12 @@ struct AdminStaffView: View {
                 ForEach(staff) { m in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
-                            Text(m.name).font(.headline)
-                            if !m.active { Text("Inactive").font(.caption2).foregroundStyle(.orange) }
+                            Text(m.name).font(.brand(.headline))
+                            if !m.active { Text("Inactive").font(.brand(.caption2)).foregroundStyle(.orange) }
                         }
-                        Text(m.email).font(.subheadline).foregroundStyle(.secondary)
+                        Text(m.email).font(.brand(.subheadline)).foregroundStyle(.secondary)
                         if !m.assignments.isEmpty {
-                            Text(m.assignments.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary)
+                            Text(m.assignments.joined(separator: ", ")).font(.brand(.caption)).foregroundStyle(.secondary)
                         }
                     }
                     .swipeActions {
@@ -273,6 +282,7 @@ struct AdminStaffView: View {
                 }
             }
             .overlay { if staff.isEmpty && error == nil { ContentUnavailableView("No staff yet", systemImage: "person.2") } }
+            .brandBackground()
             .navigationTitle("Staff")
             .toolbar { Button("Add", systemImage: "plus") { adding = true } }
             .sheet(isPresented: $adding) {
@@ -331,6 +341,7 @@ struct StaffForm: View {
                     .autocorrectionDisabled()
                 if let error { Text(error).foregroundStyle(.red) }
             }
+            .brandBackground()
             .navigationTitle("Add Staff")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -347,5 +358,27 @@ struct StaffForm: View {
             dismiss()
             await onCreated(temp, name)
         } catch { self.error = error.localizedDescription }
+    }
+}
+
+struct StatTile: View {
+    let title: String
+    let value: Int
+    let color: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(value)")
+                .font(.brand(.largeTitle, weight: .bold))
+                .foregroundStyle(color)
+                .monospacedDigit()
+            Text(title).font(.brand(.subheadline, weight: .semibold)).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(alignment: .topTrailing) {
+            Circle().fill(color.opacity(0.18)).frame(width: 12, height: 12).padding(14)
+        }
     }
 }

@@ -21,41 +21,41 @@ struct AdminPlannerView: View {
                     }
                     if let plan {
                         Text("\\(plan.eligible) approved trips available · max \\(plan.maxPerTrip) students per vehicle")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.brand(.caption)).foregroundStyle(.secondary)
                     }
                 }
                 if let plan {
                     Section("Suggestions (\\(plan.suggestions.count))") {
                         ForEach(plan.suggestions) { s in
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("\\(s.date) · \\(s.time)").font(.headline)
+                                Text("\\(s.date) · \\(s.time)").font(.brand(.headline))
                                 Text("\\(s.studentCount) students · \\(s.stops.count) stops")
-                                    .font(.subheadline)
+                                    .font(.brand(.subheadline))
                                 Text(s.stops.joined(separator: " → "))
-                                    .font(.caption).foregroundStyle(.secondary)
+                                    .font(.brand(.caption)).foregroundStyle(.secondary)
                                 Text(String(format: "Route ≈ %.1f km round trip · sites span %.1f km", s.totalKm, s.maxSpanKm))
-                                    .font(.caption).foregroundStyle(.secondary)
+                                    .font(.brand(.caption)).foregroundStyle(.secondary)
                                 Button("Combine into one journey") {
                                     label = s.stops.joined(separator: " + ")
                                     pending = s
                                 }
-                                .buttonStyle(.borderedProminent)
-                                .padding(.top, 4)
+                                .buttonStyle(.pill)
+                                .padding(.top, 6)
                             }
                             .padding(.vertical, 4)
                         }
                         if plan.suggestions.isEmpty {
                             Text("Nothing to combine. Trips must be approved, not yet combined, on the same date and shift, at sites within the distance.")
-                                .font(.footnote).foregroundStyle(.secondary)
+                                .font(.brand(.footnote)).foregroundStyle(.secondary)
                         }
                     }
                     Section("Combined journeys (\\(plan.active.count))") {
                         ForEach(plan.active) { j in
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(j.label).font(.headline)
+                                Text(j.label).font(.brand(.headline))
                                 Text("\\(j.date) · \\(j.time) · \\(j.tripCount) trips")
-                                    .font(.subheadline).foregroundStyle(.secondary)
-                                if j.locked { Text("Finalised").font(.caption).foregroundStyle(.blue) }
+                                    .font(.brand(.subheadline)).foregroundStyle(.secondary)
+                                if j.locked { Text("Finalised").font(.brand(.caption)).foregroundStyle(.blue) }
                             }
                             .swipeActions {
                                 if !j.locked {
@@ -67,6 +67,7 @@ struct AdminPlannerView: View {
                 }
             }
             .overlay { if plan == nil && error == nil { ProgressView() } }
+            .brandBackground()
             .navigationTitle("Trip Planner")
             .refreshable { await load() }
             .task(id: threshold) {

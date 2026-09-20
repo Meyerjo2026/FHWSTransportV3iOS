@@ -34,6 +34,7 @@ struct MyRequestsView: View {
                         description: Text("Submit a trip request from the Request tab."))
                 }
             }
+            .brandBackground()
             .navigationTitle("My Requests")
             .refreshable { await load() }
             .task(id: refresh) { await load() }
@@ -90,7 +91,7 @@ struct NewRequestView: View {
                             ForEach(options.timeSlots, id: \.self) { Text($0).tag($0) }
                         }
                         LabeledContent("Pickup", value: options.pickupPoint)
-                            .font(.footnote)
+                            .font(.brand(.footnote))
                     }
                     Section("Programme") {
                         Picker("Department", selection: $department) {
@@ -120,10 +121,12 @@ struct NewRequestView: View {
                         Button {
                             Task { await submit() }
                         } label: {
-                            if busy { ProgressView().frame(maxWidth: .infinity) }
-                            else { Text("Submit Request").frame(maxWidth: .infinity) }
+                            if busy { ProgressView().tint(.white) } else { Text("Submit Request") }
                         }
+                        .buttonStyle(.pill)
                         .disabled(!canSubmit)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
                     }
                 } else if let message {
                     Text(message).foregroundStyle(.red)
@@ -131,6 +134,7 @@ struct NewRequestView: View {
                     ProgressView()
                 }
             }
+            .brandBackground()
             .navigationTitle("New Request")
             .task { await loadOptions() }
         }

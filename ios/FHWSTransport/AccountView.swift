@@ -21,6 +21,7 @@ struct AccountView: View {
                     Button("Sign Out", role: .destructive) { Task { await session.signOut() } }
                 }
             }
+            .brandBackground()
             .navigationTitle("Account")
         }
     }
@@ -49,12 +50,15 @@ struct ChangePasswordView: View {
             if let error { Section { Text(error).foregroundStyle(.red) } }
             Section {
                 Button("Update Password") { Task { await save() } }
+                    .buttonStyle(.pill)
+                    .listRowBackground(Color.clear)
                     .disabled(busy || current.isEmpty || new.count < 8 || new != confirm)
                 if forced {
                     Button("Sign Out", role: .destructive) { Task { await session.signOut() } }
                 }
             }
         }
+        .brandBackground()
         .navigationTitle("Change Password")
     }
 

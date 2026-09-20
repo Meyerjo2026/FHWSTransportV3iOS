@@ -44,6 +44,7 @@ struct ApprovalsView: View {
                 }
             }
             .overlay { if data == nil && error == nil { ProgressView() } }
+            .brandBackground()
             .navigationTitle("Approvals")
             .refreshable { await load() }
             .task { await load() }

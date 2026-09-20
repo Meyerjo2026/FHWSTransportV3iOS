@@ -53,7 +53,7 @@ struct AdminMapView: View {
                             ForEach(j.stops) { s in
                                 Annotation("", coordinate: coord(s.lat, s.lng)) {
                                     Text("\(s.order)")
-                                        .font(.caption2.bold()).foregroundStyle(.white)
+                                        .font(.brand(.caption2, weight: .bold)).foregroundStyle(.white)
                                         .frame(width: 20, height: 20)
                                         .background(color, in: Circle())
                                 }
@@ -64,11 +64,12 @@ struct AdminMapView: View {
                 }
                 .mapControls { MapCompass(); MapScaleView() }
                 .overlay(alignment: .top) {
-                    if let error { Text(error).font(.caption).padding(6).background(.red.opacity(0.85), in: Capsule()).foregroundStyle(.white).padding(.top, 6) }
+                    if let error { Text(error).font(.brand(.caption)).padding(6).background(.red.opacity(0.85), in: Capsule()).foregroundStyle(.white).padding(.top, 6) }
                 }
 
                 summary
             }
+            .brandBackground()
             .navigationTitle("Placements Map")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { filterMenu } }
@@ -81,12 +82,12 @@ struct AdminMapView: View {
             if let d = data {
                 Section {
                     Text("\(d.totalPlacements) placements · \(d.totalSites) individual sites · \(d.totalJourneys) journeys")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.brand(.footnote)).foregroundStyle(.secondary)
                     if let sel = selected, sel != "pickup", let m = d.markers.first(where: { $0.id == sel }) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(m.name).font(.headline)
-                            if let a = m.address { Text(a).font(.caption).foregroundStyle(.secondary) }
-                            Text("\(m.count) placement\(m.count == 1 ? "" : "s") · \(m.departments.joined(separator: ", "))").font(.caption)
+                            Text(m.name).font(.brand(.headline))
+                            if let a = m.address { Text(a).font(.brand(.caption)).foregroundStyle(.secondary) }
+                            Text("\(m.count) placement\(m.count == 1 ? "" : "s") · \(m.departments.joined(separator: ", "))").font(.brand(.caption))
                         }
                     }
                 }
@@ -94,11 +95,11 @@ struct AdminMapView: View {
                     HStack(alignment: .top, spacing: 10) {
                         Circle().fill(colors[i % colors.count]).frame(width: 12, height: 12).padding(.top, 5)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(j.label).font(.subheadline.bold())
+                            Text(j.label).font(.brand(.subheadline, weight: .bold))
                             Text("\(j.date) · \(j.time) · \(j.studentCount) students · \(String(format: "%.1f", j.totalKm)) km\(j.allFinalised ? " · finalised" : "")")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.brand(.caption)).foregroundStyle(.secondary)
                             Text(j.stops.map { "\($0.order). \($0.name)" }.joined(separator: "  "))
-                                .font(.caption2).foregroundStyle(.secondary)
+                                .font(.brand(.caption2)).foregroundStyle(.secondary)
                         }
                     }
                 }

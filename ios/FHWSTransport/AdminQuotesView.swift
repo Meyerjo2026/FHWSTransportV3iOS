@@ -17,16 +17,18 @@ struct AdminQuotesView: View {
                     Section("Awaiting an RFQ (\(d.awaitingTrips) trips)") {
                         ForEach(d.awaitingLines) { l in
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(l.site).font(.headline)
+                                Text(l.site).font(.brand(.headline))
                                 Text("\(l.date) · \(l.time) · \(l.qty) student\(l.qty == 1 ? "" : "s")\(l.part.map { " · \($0)" } ?? "")")
-                                    .font(.subheadline).foregroundStyle(.secondary)
+                                    .font(.brand(.subheadline)).foregroundStyle(.secondary)
                             }
                         }
                         if d.awaitingLines.isEmpty {
                             Text("No finalised trips waiting. Finalise approved trips from the Review tab.")
-                                .font(.footnote).foregroundStyle(.secondary)
+                                .font(.brand(.footnote)).foregroundStyle(.secondary)
                         } else {
                             Button("Create RFQ") { creating = true }
+                                .buttonStyle(.pill)
+                                .listRowBackground(Color.clear)
                         }
                     }
                     Section("Issued RFQs") {
@@ -34,11 +36,11 @@ struct AdminQuotesView: View {
                             NavigationLink(value: q.id) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     HStack {
-                                        Text(q.ref).font(.headline)
-                                        if q.isTbc { Text("rate TBC").font(.caption2).foregroundStyle(.orange) }
+                                        Text(q.ref).font(.brand(.headline))
+                                        if q.isTbc { Text("rate TBC").font(.brand(.caption2)).foregroundStyle(.orange) }
                                     }
                                     Text("\(q.period) · \(q.total.map(Money.format) ?? "To be calculated")")
-                                        .font(.subheadline).foregroundStyle(.secondary)
+                                        .font(.brand(.subheadline)).foregroundStyle(.secondary)
                                 }
                             }
                         }
@@ -46,6 +48,7 @@ struct AdminQuotesView: View {
                 }
             }
             .overlay { if data == nil && error == nil { ProgressView() } }
+            .brandBackground()
             .navigationTitle("RFQs")
             .navigationDestination(for: Int.self) { QuoteDetailView(id: $0) }
             .navigationDestination(item: $opened) { QuoteDetailView(id: $0) }
@@ -99,11 +102,12 @@ struct NewQuoteForm: View {
                     if priced {
                         TextField("Rate per trip (ZAR)", text: $rate).keyboardType(.decimalPad)
                     } else {
-                        Text("The supplier will price each trip line.").font(.footnote).foregroundStyle(.secondary)
+                        Text("The supplier will price each trip line.").font(.brand(.footnote)).foregroundStyle(.secondary)
                     }
                 }
                 if let error { Text(error).foregroundStyle(.red) }
             }
+            .brandBackground()
             .navigationTitle("New RFQ")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -146,21 +150,21 @@ struct QuoteDetailView: View {
                 Section("Trips") {
                     ForEach(q.lines) { l in
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("\(l.date) \(l.time)").font(.headline)
+                            Text("\(l.date) \(l.time)").font(.brand(.headline))
                             Text("\(l.site) and return · 7-Seater\(l.part.map { " (\($0))" } ?? "")")
-                                .font(.subheadline)
+                                .font(.brand(.subheadline))
                             HStack {
                                 Text("\(l.qty) trip\(l.qty == 1 ? "" : "s")").foregroundStyle(.secondary)
                                 Spacer()
                                 Text(l.extended.map(Money.format) ?? "To be calculated")
                             }
-                            .font(.caption)
+                            .font(.brand(.caption))
                         }
                     }
                 }
                 Section {
                     LabeledContent("Total (ZAR)", value: q.total.map(Money.format) ?? "To be calculated")
-                        .font(.headline)
+                        .font(.brand(.headline))
                 }
             }
         }
