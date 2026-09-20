@@ -69,6 +69,15 @@ class StaffController extends Controller
         return view('staff.bulk', ['user' => Auth::user()]);
     }
 
+    public function adminBulkForm()
+    {
+        return view('staff.bulk', [
+            'user' => Auth::user(),
+            'tabs' => ['/admin/dashboard' => 'Dashboard', '/admin' => 'Consolidate Trips', '/admin/review' => 'Approve / Reject', '/admin/journeys' => 'AI Trip Planner', '/admin/finalise' => 'Finalise Trips', '/admin/quotes' => 'Create RFQ', '/admin/bulk-trips' => 'Bulk Upload Trips', '/admin/sites' => 'Clinical Sites', '/admin/map' => 'Map', '/admin/group-assignments' => 'Staff Assignments'],
+            'active' => '/admin/bulk-trips',
+        ]);
+    }
+
     public function bulkUpload(Request $request)
     {
         $request->validate([

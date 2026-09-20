@@ -83,6 +83,8 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])->prefix('admin')->
     Route::post('/sites/{site}/toggle', [AdminController::class, 'toggleSite']);
     Route::post('/sites/{site}', [AdminController::class, 'updateSite']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/bulk-trips', [StaffController::class, 'adminBulkForm']);
+    Route::post('/bulk-trips', [StaffController::class, 'bulkUpload']);
     Route::get('/export', [DashboardController::class, 'export']);
     Route::get('/map', [MapController::class, 'index']);
     Route::get('/journeys', [JourneyController::class, 'index']);
