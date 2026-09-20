@@ -10,19 +10,8 @@
 		A00000000000000000000001 /* FHWSTransport.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FHWSTransport.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		A00000000000000000000002 /* FHWSTransport */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				A00000000000000000000009 /* Exceptions for "FHWSTransport" folder */,
-			);
-			path = FHWSTransport;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
-
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A00000000000000000000009 /* Exceptions for "FHWSTransport" folder */ = {
+		A00000000000000000000009 /* Exceptions for "FHWSTransport" folder in "FHWSTransport" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -30,6 +19,17 @@
 			target = A00000000000000000000005 /* FHWSTransport */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		A00000000000000000000002 /* FHWSTransport */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A00000000000000000000009 /* Exceptions for "FHWSTransport" folder in "FHWSTransport" target */,
+			);
+			path = FHWSTransport;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A00000000000000000000003 /* Frameworks */ = {
@@ -99,6 +99,7 @@
 				Base,
 			);
 			mainGroup = A00000000000000000000004;
+			preferredProjectObjectVersion = 77;
 			productRefGroup = A0000000000000000000000A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -164,7 +165,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FHWSTransport/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FHWS Transport";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = za.ac.cput.fhws.transport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -181,7 +185,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FHWSTransport/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FHWS Transport";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = za.ac.cput.fhws.transport;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -193,20 +200,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A0000000000000000000000E /* Build configuration list for PBXProject "FHWSTransport" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A0000000000000000000000F /* Debug */,
-				A00000000000000000000010 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A0000000000000000000000B /* Build configuration list for PBXNativeTarget "FHWSTransport" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A00000000000000000000011 /* Debug */,
 				A00000000000000000000012 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0000000000000000000000E /* Build configuration list for PBXProject "FHWSTransport" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0000000000000000000000F /* Debug */,
+				A00000000000000000000010 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

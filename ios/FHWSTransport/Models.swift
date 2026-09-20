@@ -84,3 +84,43 @@ struct NewRequest: Encodable {
         case clinicalSiteId = "clinical_site_id"
     }
 }
+
+struct AdminDashboard: Decodable {
+    struct Row: Decodable, Identifiable { let label: String; let total: Int; var id: String { label } }
+    let total: Int
+    let statusCounts: [String: Int]
+    let awaitingQuote: Int
+    let byDepartment: [Row]
+    let recent: [TripRequest]
+
+    enum CodingKeys: String, CodingKey {
+        case total, recent
+        case statusCounts = "status_counts"
+        case awaitingQuote = "awaiting_quote"
+        case byDepartment = "by_department"
+    }
+}
+
+struct AdminSite: Decodable, Identifiable {
+    let id: Int
+    let name: String
+    let address: String?
+    let type: String?
+    let active: Bool
+}
+
+struct SitesResponse: Decodable {
+    let sites: [AdminSite]
+    let types: [String]
+}
+
+/// Response shape of site create/update (only the id is used).
+struct Site2: Decodable { let id: Int }
+
+struct StaffMember: Decodable, Identifiable {
+    let id: Int
+    let name: String
+    let email: String
+    let active: Bool
+    let assignments: [String]
+}

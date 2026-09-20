@@ -7,6 +7,7 @@ struct StatusBadge: View {
         switch status {
         case "approved": .green
         case "rejected": .red
+        case "finalised": .blue
         default: .orange
         }
     }

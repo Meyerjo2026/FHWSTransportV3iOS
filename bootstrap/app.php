@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
+            'api.admin' => \App\Http\Middleware\EnsureApiAdmin::class,
             'password.changed' => \App\Http\Middleware\EnsurePasswordChanged::class,
         ]);
     })

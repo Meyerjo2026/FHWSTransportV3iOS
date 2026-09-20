@@ -13,6 +13,8 @@ struct RootView: View {
                     ChangePasswordView(forced: true)
                 } else if user.role == "student" {
                     StudentHome()
+                } else if user.role == "admin" {
+                    AdminHome()
                 } else {
                     ApprovalsHome()
                 }

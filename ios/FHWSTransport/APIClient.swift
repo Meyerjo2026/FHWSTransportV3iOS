@@ -43,6 +43,36 @@ struct APIClient {
             body: PasswordBody(current_password: current, password: new, password_confirmation: new))
     }
 
+    // MARK: Admin
+    private struct BulkBody: Encodable { let status: String; let ids: [Int] }
+    private struct SiteBody: Encodable { let name: String; let address: String?; let type: String?; let active: Bool? }
+    private struct StaffBody: Encodable { let name, email: String }
+    private struct Updated: Decodable { let updated: Int }
+    private struct Temp: Decodable { let temporary_password: String }
+    private struct Toggled: Decodable { let active: Bool }
+
+    func adminDashboard() async throws -> AdminDashboard { try await send("GET", "admin/dashboard") }
+    func adminReview(status: String?) async throws -> [TripRequest] {
+        try await send("GET", "admin/review" + (status.map { "?status=\($0)" } ?? ""))
+    }
+    func bulkStatus(ids: [Int], status: String) async throws -> Int {
+        (try await send("POST", "admin/review/bulk", body: BulkBody(status: status, ids: ids)) as Updated).updated
+    }
+    func adminSites() async throws -> SitesResponse { try await send("GET", "admin/sites") }
+    func saveSite(id: Int?, name: String, address: String?, type: String?, active: Bool? = nil) async throws {
+        let body = SiteBody(name: name, address: address, type: type, active: active)
+        let _: Site2 = try await send("POST", id.map { "admin/sites/\($0)" } ?? "admin/sites", body: body)
+    }
+    func adminStaff() async throws -> [StaffMember] { try await send("GET", "admin/staff") }
+    func createStaff(name: String, email: String) async throws -> String {
+        (try await send("POST", "admin/staff", body: StaffBody(name: name, email: email)) as Temp).temporary_password
+    }
+    func resetStaff(id: Int) async throws -> String {
+        (try await send("POST", "admin/staff/\(id)/reset-password") as Temp).temporary_password
+    }
+    func toggleStaff(id: Int) async throws { let _: Toggled = try await send("POST", "admin/staff/\(id)/toggle") }
+    func deleteStaff(id: Int) async throws { let _: OK = try await send("DELETE", "admin/staff/\(id)") }
+
     private func send<T: Decodable>(_ method: String, _ path: String, body: (some Encodable)? = nil as String?) async throws -> T {
         guard let url = URL(string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) + "/api/" + path) else {
             throw APIError.badURL

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminApiController;
 use App\Http\Controllers\Api\ApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,4 +19,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // Staff + admin
     Route::get('/approvals', [ApiController::class, 'approvals']);
     Route::post('/requests/{tripRequest}/status', [ApiController::class, 'setStatus']);
+
+    // Admin
+    Route::prefix('admin')->middleware('api.admin')->group(function () {
+        Route::get('/dashboard', [AdminApiController::class, 'dashboard']);
+        Route::get('/review', [AdminApiController::class, 'review']);
+        Route::post('/review/bulk', [AdminApiController::class, 'bulkStatus']);
+        Route::get('/sites', [AdminApiController::class, 'sites']);
+        Route::post('/sites', [AdminApiController::class, 'storeSite']);
+        Route::post('/sites/{site}', [AdminApiController::class, 'updateSite']);
+        Route::get('/staff', [AdminApiController::class, 'staff']);
+        Route::post('/staff', [AdminApiController::class, 'storeStaff']);
+        Route::post('/staff/{staff}/reset-password', [AdminApiController::class, 'resetStaffPassword']);
+        Route::post('/staff/{staff}/toggle', [AdminApiController::class, 'toggleStaff']);
+        Route::delete('/staff/{staff}', [AdminApiController::class, 'destroyStaff']);
+    });
 });
