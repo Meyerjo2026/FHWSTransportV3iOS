@@ -16,6 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/options', [ApiController::class, 'options']);
     Route::get('/requests', [ApiController::class, 'myRequests']);
     Route::post('/requests', [ApiController::class, 'storeRequest']);
+    Route::get('/calendar-link', [ApiController::class, 'calendarLink']);
+    Route::post('/calendar-link/rotate', [ApiController::class, 'rotateCalendarLink']);
 
     // Staff + admin
     Route::get('/approvals', [ApiController::class, 'approvals']);

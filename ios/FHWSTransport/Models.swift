@@ -434,3 +434,13 @@ struct AssignmentsResponse: Decodable {
     var sections: [AssignmentSection]
     let staff: [StaffChoice]
 }
+
+struct CalendarLink: Decodable {
+    let url: String
+    let webcalUrl: String
+
+    enum CodingKeys: String, CodingKey {
+        case url
+        case webcalUrl = "webcal_url"
+    }
+}

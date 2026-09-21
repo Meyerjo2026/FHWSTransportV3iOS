@@ -134,6 +134,9 @@ struct APIClient {
         let _: OK = try await send("POST", "admin/assignments", body: AssignBody(type: type, value: value, staff_id: staffID))
     }
 
+    func calendarLink() async throws -> CalendarLink { try await send("GET", "calendar-link") }
+    func rotateCalendarLink() async throws -> CalendarLink { try await send("POST", "calendar-link/rotate") }
+
     private func send<T: Decodable>(_ method: String, _ path: String, body: (some Encodable)? = nil as String?) async throws -> T {
         guard let url = URL(string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) + "/api/" + path) else {
             throw APIError.badURL

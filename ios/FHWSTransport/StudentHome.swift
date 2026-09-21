@@ -17,16 +17,30 @@ struct StudentHome: View {
 
 struct MyRequestsView: View {
     @Environment(Session.self) private var session
+    @Environment(CalendarService.self) private var calendar
+    @Environment(\.openURL) private var openURL
     let refresh: Int
+    @State private var link: CalendarLink?
+    @State private var confirmReset = false
     @State private var trips: [TripRequest] = []
     @State private var error: String?
+    @State private var notice: String?
     @State private var loaded = false
 
     var body: some View {
         NavigationStack {
             List {
-                if let error { Text(error).foregroundStyle(.red) }
-                ForEach(trips) { TripRow(trip: $0) }
+                if let error { Text(error).font(.brand(.footnote)).foregroundStyle(Theme.red) }
+                if let notice { Label(notice, systemImage: "calendar.badge.checkmark").font(.brand(.footnote)).foregroundStyle(Theme.green) }
+                syncCard
+                ForEach(trips) { trip in
+                    VStack(alignment: .leading, spacing: 8) {
+                        TripRow(trip: trip)
+                        if trip.status == "approved" || trip.status == "finalised" {
+                            calendarButton(trip)
+                        }
+                    }
+                }
             }
             .overlay {
                 if loaded && trips.isEmpty && error == nil {
@@ -36,9 +50,88 @@ struct MyRequestsView: View {
             }
             .brandBackground()
             .navigationTitle("My Requests")
+            .toolbar {
+                let pending = calendar.pending(trips)
+                if !pending.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Add \(pending.count) to Calendar", systemImage: "calendar.badge.plus") {
+                            Task { await add(pending) }
+                        }
+                    }
+                }
+            }
             .refreshable { await load() }
             .task(id: refresh) { await load() }
         }
+    }
+
+    private var syncCard: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Keep your calendar up to date", systemImage: "calendar.badge.clock")
+                    .font(.brand(.headline))
+                Text("Subscribe once and approved trips appear in Calendar automatically. If a trip is rejected or changed, it updates or disappears on the next refresh.")
+                    .font(.brand(.footnote)).foregroundStyle(.secondary)
+                Button("Subscribe in Calendar") {
+                    Task { await subscribe() }
+                }
+                .buttonStyle(.pill)
+                HStack(spacing: 16) {
+                    if let link { ShareLink("Share link", item: link.url) }
+                    if link != nil { Button("Reset link") { confirmReset = true } }
+                }
+                .font(.brand(.caption, weight: .semibold))
+                .buttonStyle(.borderless)
+                Text("Use either subscribing or the Add to Calendar buttons below, not both, or trips show twice.")
+                    .font(.brand(.caption2)).foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+        }
+        .confirmationDialog("Reset your calendar link?", isPresented: $confirmReset, titleVisibility: .visible) {
+            Button("Reset link", role: .destructive) { Task { await resetLink() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The old link stops working. You'll need to subscribe again.")
+        }
+    }
+
+    private func subscribe() async {
+        error = nil
+        do {
+            let l = try await session.api.calendarLink()
+            link = l
+            if let url = URL(string: l.webcalUrl) { openURL(url) }
+        } catch APIError.unauthorized { session.clear() }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func resetLink() async {
+        do {
+            link = try await session.api.rotateCalendarLink()
+            notice = "Link reset. Remove the old calendar in Calendar ▸ Calendars and subscribe again."
+        } catch { self.error = error.localizedDescription }
+    }
+
+    @ViewBuilder
+    private func calendarButton(_ trip: TripRequest) -> some View {
+        if calendar.isAdded(trip) {
+            Label("On your calendar", systemImage: "calendar.badge.checkmark")
+                .font(.brand(.caption, weight: .semibold)).foregroundStyle(Theme.green)
+        } else {
+            Button { Task { await add([trip]) } } label: {
+                Label("Add this trip once", systemImage: "calendar.badge.plus")
+                    .font(.brand(.caption, weight: .semibold))
+            }
+            .buttonStyle(.borderless)
+        }
+    }
+
+    private func add(_ list: [TripRequest]) async {
+        error = nil; notice = nil
+        do {
+            let n = try await calendar.add(list)
+            notice = n == 1 ? "Added 1 trip to your calendar." : "Added \(n) trips to your calendar."
+        } catch { self.error = error.localizedDescription }
     }
 
     private func load() async {

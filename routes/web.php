@@ -5,11 +5,16 @@ use App\Http\Controllers\Admin\JourneyController;
 use App\Http\Controllers\Admin\MapController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\ForcePasswordController;
+use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/calendar/{token}.ics', [CalendarFeedController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{40}')
+    ->middleware('throttle:120,1');
 
 Route::get('/', function () {
     if (! Auth::check()) {

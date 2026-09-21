@@ -11,6 +11,7 @@ use App\Support\TransportOptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class ApiController extends Controller
@@ -166,6 +167,29 @@ class ApiController extends Controller
         $tripRequest->update(['status' => $data['status']]);
 
         return response()->json($this->tripPayload($tripRequest));
+    }
+
+    public function calendarLink(Request $request): JsonResponse
+    {
+        return response()->json($this->calendarPayload($request, $this->requireRole($request, 'student')));
+    }
+
+    public function rotateCalendarLink(Request $request): JsonResponse
+    {
+        $user = $this->requireRole($request, 'student');
+        $user->forceFill(['calendar_token' => Str::random(40)])->save();
+
+        return response()->json($this->calendarPayload($request, $user));
+    }
+
+    private function calendarPayload(Request $request, User $user): array
+    {
+        if (! $user->calendar_token) {
+            $user->forceFill(['calendar_token' => Str::random(40)])->save();
+        }
+        $url = $request->getSchemeAndHttpHost().'/calendar/'.$user->calendar_token.'.ics';
+
+        return ['url' => $url, 'webcal_url' => preg_replace('#^https?://#', 'webcal://', $url)];
     }
 
     private function requireRole(Request $request, string ...$roles): User
