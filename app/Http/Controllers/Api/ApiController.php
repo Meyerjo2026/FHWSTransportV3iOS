@@ -55,10 +55,14 @@ class ApiController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $request->user()->update([
+        $user = $request->user();
+        $user->update([
             'password' => $data['password'],
             'must_change_password' => false,
         ]);
+
+        // Sign out every other device/session that used the old password.
+        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
 
         return response()->json(['ok' => true]);
     }

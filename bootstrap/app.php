@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // using explicit RFC-1918 CIDRs. Do NOT call trustProxies(at: '*') here —
         // the '*' wildcard can produce null CIDR entries in Symfony's IpUtils.
 
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
             'api.admin' => \App\Http\Middleware\EnsureApiAdmin::class,

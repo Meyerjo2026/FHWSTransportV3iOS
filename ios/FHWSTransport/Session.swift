@@ -12,7 +12,7 @@ final class Session {
     private(set) var token: String?
 
     init() {
-        baseURL = UserDefaults.standard.string(forKey: "baseURL") ?? "http://fhws-transport.test"
+        baseURL = UserDefaults.standard.string(forKey: "baseURL") ?? "https://fhws-transport.test"
         token = Keychain.read()
     }
 

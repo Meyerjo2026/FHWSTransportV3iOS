@@ -24,7 +24,11 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Thandi Nkosi', 'email' => 'student@mycput.ac.za', 'number' => '0821234567', 'password' => 'student123', 'role' => 'student'],
         ];
 
-        foreach ($demo as $u) {
+        // Demo accounts use well-known passwords: never create them in production
+        // unless SEED_DEMO_USERS=true is set deliberately.
+        $seedDemo = ! app()->environment('production') || filter_var(env('SEED_DEMO_USERS', false), FILTER_VALIDATE_BOOLEAN);
+
+        foreach ($seedDemo ? $demo : [] as $u) {
             User::firstOrCreate(
                 ['email' => $u['email']],
                 [
