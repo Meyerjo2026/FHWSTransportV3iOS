@@ -14,6 +14,14 @@ class MapController extends Controller
 {
     public function index(Request $request)
     {
+        return view('admin.map', ['user' => Auth::user()] + $this->data($request));
+    }
+
+    /**
+     * Map data shared by the web view and the JSON API.
+     */
+    public function data(Request $request): array
+    {
         $department = $request->input('department');
         $date = $request->input('date');
         $shift = $request->input('shift');
@@ -105,8 +113,7 @@ class MapController extends Controller
             $journeys = collect();
         }
 
-        return view('admin.map', [
-            'user' => Auth::user(),
+        return [
             'markers' => $markers,
             'journeys' => $journeys,
             'departments' => TransportOptions::departments(),
@@ -120,6 +127,6 @@ class MapController extends Controller
             'totalPlacements' => $requests->count() + $journeys->sum('studentCount'),
             'totalSites' => $markers->count(),
             'totalJourneys' => $journeys->count(),
-        ]);
+        ];
     }
 }

@@ -113,3 +113,11 @@ This repo deploys as a Docker web service + a managed **PostgreSQL** database (R
 
 - Ran the full migration set (all 12 migrations) against a real local PostgreSQL instance — clean, no MySQL-specific syntax anywhere in the schema.
 - Built the actual `Dockerfile` with `docker build` and ran it as a container against a containerized Postgres, reproducing Render's setup: migrations ran automatically on boot, `/up` health check returned 200, `/login` rendered, and logging in as admin and browsing to Clinical Sites correctly showed all 68 seeded sites — so this isn't just a theoretical config, the whole path has actually been exercised end-to-end.
+
+## Production hardening
+
+- Serve over HTTPS only (Render provides TLS). Set `APP_ENV=production`, `APP_DEBUG=false` and an `https://` `APP_URL`; HTTPS is forced and HSTS is sent automatically in production.
+- Demo accounts (`admin123` / `staff123` / `student123`) are **not** seeded in production. Create a real admin with a strong password; set `SEED_DEMO_USERS=true` only if you deliberately want them.
+- API tokens expire after `SANCTUM_TOKEN_EXPIRATION` minutes (default 30 days) and expired tokens are pruned daily (run the Laravel scheduler). Changing a password signs out every other API session.
+- Set `SESSION_SECURE_COOKIE=true` behind HTTPS. Student calendar-feed links are secrets in the URL, so they must only be used over HTTPS; students can reset them in the app.
+- Local HTTPS with Herd: `herd secure fhws-transport`, then set `APP_URL=https://fhws-transport.test`.
