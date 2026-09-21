@@ -286,7 +286,14 @@ struct AdminStaffView: View {
             .overlay { if staff.isEmpty && error == nil { ContentUnavailableView("No staff yet", systemImage: "person.2") } }
             .brandBackground()
             .navigationTitle("Staff")
-            .toolbar { Button("Add", systemImage: "plus") { adding = true } }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink("Assignments") { AdminAssignmentsView() }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Add", systemImage: "plus") { adding = true }
+                }
+            }
             .sheet(isPresented: $adding) {
                 StaffForm { temp, name in notice = "Created \(name). Temporary password: \(temp)"; await load() }
             }

@@ -345,6 +345,61 @@ class AdminApiController extends Controller
         ];
     }
 
+    private const ASSIGNMENT_LABELS = ['year' => 'Year group', 'department' => 'Department', 'qualification' => 'Qualification'];
+
+    private function assignmentOptions(string $type): array
+    {
+        return match ($type) {
+            'year' => TransportOptions::YEAR_OPTIONS,
+            'department' => TransportOptions::departments(),
+            'qualification' => TransportOptions::allQualifications(),
+            default => [],
+        };
+    }
+
+    public function assignments(): JsonResponse
+    {
+        $sections = collect(self::ASSIGNMENT_LABELS)->map(function ($label, $type) {
+            $existing = GroupAssignment::with('staff')->where('type', $type)->get()->keyBy('value');
+
+            return [
+                'type' => $type,
+                'label' => $label,
+                'options' => collect($this->assignmentOptions($type))->map(fn ($value) => [
+                    'value' => $value,
+                    'staff_id' => $existing->get($value)?->staff_id,
+                    'staff_name' => $existing->get($value)?->staff?->name,
+                ])->values(),
+            ];
+        })->values();
+
+        return response()->json([
+            'sections' => $sections,
+            'staff' => User::where('role', 'staff')->where('active', true)->orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function updateAssignment(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'type' => ['required', 'in:year,department,qualification'],
+            'value' => ['required', 'string'],
+            'staff_id' => ['nullable', 'integer'],
+        ]);
+
+        abort_unless(in_array($data['value'], $this->assignmentOptions($data['type']), true), 422, 'Unknown option for that group type.');
+        if (! empty($data['staff_id'])) {
+            abort_unless(User::where('id', $data['staff_id'])->where('role', 'staff')->exists(), 422, 'That user is not a staff member.');
+        }
+
+        GroupAssignment::updateOrCreate(
+            ['type' => $data['type'], 'value' => $data['value']],
+            ['staff_id' => $data['staff_id'] ?: null]
+        );
+
+        return response()->json(['ok' => true]);
+    }
+
     private function revokeAccess(User $u): void
     {
         DB::table('sessions')->where('user_id', $u->id)->delete();

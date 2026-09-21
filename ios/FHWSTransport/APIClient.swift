@@ -128,6 +128,12 @@ struct APIClient {
         return try JSONDecoder().decode(T.self, from: data)
     }
 
+    private struct AssignBody: Encodable { let type, value: String; let staff_id: Int? }
+    func assignments() async throws -> AssignmentsResponse { try await send("GET", "admin/assignments") }
+    func assign(type: String, value: String, staffID: Int?) async throws {
+        let _: OK = try await send("POST", "admin/assignments", body: AssignBody(type: type, value: value, staff_id: staffID))
+    }
+
     private func send<T: Decodable>(_ method: String, _ path: String, body: (some Encodable)? = nil as String?) async throws -> T {
         guard let url = URL(string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) + "/api/" + path) else {
             throw APIError.badURL

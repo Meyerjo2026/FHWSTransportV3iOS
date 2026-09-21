@@ -41,6 +41,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/sites', [AdminApiController::class, 'sites']);
         Route::post('/sites', [AdminApiController::class, 'storeSite']);
         Route::post('/sites/{site}', [AdminApiController::class, 'updateSite']);
+        Route::get('/assignments', [AdminApiController::class, 'assignments']);
+        Route::post('/assignments', [AdminApiController::class, 'updateAssignment']);
         Route::get('/staff', [AdminApiController::class, 'staff']);
         Route::post('/staff', [AdminApiController::class, 'storeStaff']);
         Route::post('/staff/{staff}/reset-password', [AdminApiController::class, 'resetStaffPassword']);

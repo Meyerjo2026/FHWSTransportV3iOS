@@ -404,3 +404,33 @@ struct SiteUploadResult: Decodable {
         case skippedCount = "skipped_count"
     }
 }
+
+struct AssignmentOption: Decodable, Identifiable {
+    let value: String
+    var staffId: Int?
+    var staffName: String?
+    var id: String { value }
+
+    enum CodingKeys: String, CodingKey {
+        case value
+        case staffId = "staff_id"
+        case staffName = "staff_name"
+    }
+}
+
+struct AssignmentSection: Decodable, Identifiable {
+    let type: String
+    let label: String
+    var options: [AssignmentOption]
+    var id: String { type }
+}
+
+struct StaffChoice: Decodable, Identifiable, Hashable {
+    let id: Int
+    let name: String
+}
+
+struct AssignmentsResponse: Decodable {
+    var sections: [AssignmentSection]
+    let staff: [StaffChoice]
+}
